@@ -1,0 +1,14 @@
+
+/*Body, layout*/
+* {
+	margin: 0px;
+	padding: 0px;
+	box-sizing: border-box;
+}
+.layout-boxed body, .layout-boxed html, .wrapper, body, html {
+    height: 100%}
+.wrapper, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
