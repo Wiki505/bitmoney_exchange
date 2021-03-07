@@ -21,12 +21,10 @@ class bitmoney_exchange_engine():
 
     def new_virtual_value(self, assigned_to, amount):
             #   Hash and proof of work from Bitmoney Data
-
             """
             Por motivos de seguridad a la hora de encriptar el valor virtual, se incluyen los valores
             timestamp y el uuid de la transaccion realizada, y no via predefinida en la db timestamp.
             """
-
             virtual_value = {
                 'amount': amount,
                 'timestamp':self.__timestamp,
@@ -45,6 +43,32 @@ class bitmoney_exchange_engine():
         print(alerts.good, 'Previous Hash: {}'.format(root_hash))
         return root_hash
 
+    def tranx_run(self):
+
+        previous_hash = self.previous_hash_id()
+        tranx_data = {
+            'seed_address': self.__seed,
+            'root_address': self.__root,
+            'tranx_amount': self.__network_tranx,
+            'tranx_fees': self.__transaction_fees,
+            'tranx_nonce': self.__nonce,
+            'timestamp': self.__timestamp,
+            'previous_hash': previous_hash,
+            'bitmoney_gold_mined': 0,
+        }
+
+        hash_data_result = network_hash_engine(tranx_data).start_engine()
+
+        bitmoney_gold_mined = 0
+
+        x = bitnet_db().write(
+            "INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, tranx_nonce, timestamp, bitmoney_gold_mined) "
+            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__network_tranx,
+                                                                      self.__transaction_fees,
+                                                                      hash_data_result[0], hash_data_result[1],
+                                                                      self.__nonce, self.__timestamp,
+                                                                      bitmoney_gold_mined))
+
     @property
     def exchange_engine(self):
         account_status = bitnet_db().read('SELECT hash_id, amount FROM bitmoney WHERE username="{0}" '
@@ -60,42 +84,15 @@ class bitmoney_exchange_engine():
 
             if address_balance < self.__network_tranx:
                 pass
-
             elif address_balance > self.__network_tranx:
                 bitmoney_return = round(address_balance - self.__network_tranx, 2)
-
                 # Insertando el saldo por piezas y creando una nueva pieza por cambio
-                new_virtual_value = self.new_virtual_value(self.__root, bitmoney_return)
-
-                tranx_data = {
-                'seed_address':self.__seed,
-                'root_address':self.__root,
-                'tranx_amount':self.__network_tranx,
-                'tranx_fees':self.__transaction_fees,
-                'tranx_nonce':self.__nonce,
-                'timestamp':self.__timestamp,
-                'bitmoney_gold_mined':0,
-                }
-
-                hash_data_result = network_hash_engine(tranx_data).start_engine()
-
-                bitmoney_gold_mined = 0
-
-                x = bitnet_db().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, tranx_nonce, timestamp, bitmoney_gold_mined) "
-                                      "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__network_tranx, self.__transaction_fees,
-                                                                                                hash_data_result[0], hash_data_result[1], self.__nonce, self.__timestamp, bitmoney_gold_mined))
-
-                print('Bitmoney de Retorno', bitmoney_return)
-
+                self.new_virtual_value(self.__root, bitmoney_return)
+                self.tranx_run()
                 return True
-
             elif address_balance == self.__network_tranx:
-                hash_id = network_hash_engine((self.__nonce,self.__timestamp)).start_engine()
-                print(address_balance, '----', self.__network_tranx)
-                print(hash_id, self.__nonce, self.__timestamp)
-
-                return hash_id, self.__nonce, self.__timestamp
-
+                self.tranx_run()
+                return True
             else:
                 continue
 
