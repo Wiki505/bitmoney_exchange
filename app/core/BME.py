@@ -19,13 +19,34 @@ class bitmoney_exchange_engine():
         self.__seed = seed_address
         self.__root = root_address
 
+    def digital_money_action(self, amount):
+            #   Hash and proof of work from Bitmoney Data
+
+            """
+            Por motivos de seguridad a la hora de encriptar el valor virtual, se incluyen los valores
+            timestamp y el uuid de la transaccion realizada, y no via predefinida en la db timestamp.
+            """
+
+            virtual_value = {
+                'amount': amount,
+                'timestamp':self.__timestamp,
+                'nonce':self.__nonce,
+                'seed':self.__seed,
+            }
+
+            hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
+
+            bitnet_db().read("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_in) "
+                             "VALUES ('{}','{}','{}','{}')".format(hash_id, virtual_value['amount'], virtual_value['nonce'], virtual_value['seed'], virtual_value['timestamp']))
+            return True
+
+
     def previous_hash_id(self):
         root_hash = bitnet_db().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
         print(alerts.good, 'Previous Hash: {}'.format(root_hash))
         return root_hash
 
-
-    # @property
+    @property
     def exchange_engine(self):
         account_status = bitnet_db().read('SELECT hash_id, amount FROM bitmoney WHERE username="{0}" '
                                           'and bitmoney_status="0" ORDER BY amount DESC'.format(self.__seed))
@@ -43,16 +64,22 @@ class bitmoney_exchange_engine():
 
             elif address_balance > self.__network_tranx:
                 bitmoney_return = round(address_balance - self.__network_tranx, 2)
+
+                # insertar nuevo bitmoney
+
+
                 hash_id = network_hash_engine((bitmoney_return, self.__nonce, self.__timestamp)).start_engine()
                 print('Bitmoney de Retorno', bitmoney_return)
                 print(address_balance, '----',self.__network_tranx)
                 print(hash_id, self.__nonce, self.__timestamp)
+
                 return hash_id, self.__nonce, self.__timestamp
 
             elif address_balance == self.__network_tranx:
                 hash_id = network_hash_engine((self.__nonce,self.__timestamp)).start_engine()
                 print(address_balance, '----', self.__network_tranx)
                 print(hash_id, self.__nonce, self.__timestamp)
+
                 return hash_id, self.__nonce, self.__timestamp
 
             else:
@@ -99,6 +126,8 @@ class bitmoney_exchange_engine():
         else:
             print(alerts.bad, 'Address invalid!')
             return False
+
+
 
 a = bitmoney_exchange_engine('canino', 'perrito', 97.1).bitmoney_transaction()
 

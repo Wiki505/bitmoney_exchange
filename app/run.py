@@ -27,6 +27,10 @@ def profile():
             'SELECT SUM(amount) as total FROM bitmoney_gold WHERE username="{username_session}" and status="0"'.format(username_session=login_session))
         print(bitmoney_network_balance)
         return render_template('account/home.html', balance=bitmoney_network_balance, username=login_session)
+    else:
+        flash('Inicia sesion para esta operacion!')
+        return redirect(url_for('login'))
+
 
 @bitmoney_platform.route('/bitmoney_transferring')
 def bitmoney_tranfering():
@@ -43,12 +47,13 @@ def bitmoney_tranfering():
                 print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
                 flash('Existe un problema con tu cuenta prix!')
                 return redirect(url_for('profile'))
-        print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
-        flash('Existe un problema con tu cuenta prix!')
-        return redirect(url_for('profile'))
-    flash('Inicia sesion para esta operacion!')
-    return redirect(url_for('login'))
-
+        else:
+            print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
+            flash('Existe un problema con tu cuenta prix!')
+            return redirect(url_for('profile'))
+    else:
+        flash('Inicia sesion para esta operacion!')
+        return redirect(url_for('login'))
 
 @bitmoney_platform.route('/login')
 def login():
@@ -59,7 +64,7 @@ def login_action():
     if request.method == 'POST':
         username = request.form['username']
         password = hash_string(request.form['password'])
-        a = mysql_control('bitmoney_exchange').read("SELECT password FROM bm_users WHERE username='{}'".format(username))
+        a = bitex_db().read("SELECT password FROM bm_users WHERE username='{}'".format(username))
         if a == []:
             flash('no existe')
             return redirect(url_for('login'))
@@ -72,6 +77,10 @@ def login_action():
             print(a)
             flash(a)
             return redirect(url_for('page_not_found'))
+    else:
+        print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
+        flash('Existe un problema con tu cuenta prix!')
+        return redirect(url_for('profile'))
 
 @bitmoney_platform.route('/register')
 def register():
