@@ -2,12 +2,13 @@ from os import urandom
 from flask_bootstrap import Bootstrap
 from flask import Flask, render_template, redirect, request, flash, url_for, session
 from mysql.connector.errors import IntegrityError
-from app.database_engine.mysql_engine import mysql_control
+from app.database_engine.mysql_engine import bitex_db, bitnet_db
 from app.core.hash_engine import hash_string, network_hash_engine
 from datetime import datetime
 from uuid import uuid4
+from app.core.BME import bitmoney_exchange_engine
 from app.utils import email_engine
-
+from app.utils.terminal_alert import alerts
 bitmoney_platform = Flask(__name__)
 # bootstrap = Bootstrap()
 # bitmoney_platform.config['SECRET_KEY'] = urandom(12)
@@ -16,31 +17,37 @@ bitmoney_platform = Flask(__name__)
 def index():
     return redirect('http://0.0.0.0:1080/register')
 
-@bitmoney_platform.route('/home')
-def home():
+@bitmoney_platform.route('/profile')
+def profile():
     if 'username' in session:
-
         login_session = session['username']
         print(type(login_session))
-        bitmoney_network_balance = mysql_control('bitmoney_network').read(
+        bitmoney_network_balance = bitnet_db().read(
             'SELECT SUM(amount) as total FROM bitmoney WHERE username="{username_session}" and status="0" UNION '
             'SELECT SUM(amount) as total FROM bitmoney_gold WHERE username="{username_session}" and status="0"'.format(username_session=login_session))
         print(bitmoney_network_balance)
-
         return render_template('account/home.html', balance=bitmoney_network_balance, username=login_session)
 
-@bitmoney_platform.route('/home_action')
-def home_action():
+@bitmoney_platform.route('/bitmoney_transferring')
+def bitmoney_tranfering():
     if 'username' in session:
-        login_session = session['username']
-
+        seed = session['username']
         if request.method == 'POST':
-            end_address = request.form['end_address']
+            root = request.form['seed_address']
             bitmoney_amount = request.form['bitmoney_amount']
-
-
-
-
+            transfer_status = bitmoney_exchange_engine(seed, root, bitmoney_amount)
+            if transfer_status == True:
+                flash('{} fue tranferido con éxito a {}'.format(bitmoney_amount, root))
+                return redirect(url_for('profile'))
+            else:
+                print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
+                flash('Existe un problema con tu cuenta prix!')
+                return redirect(url_for('profile'))
+        print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
+        flash('Existe un problema con tu cuenta prix!')
+        return redirect(url_for('profile'))
+    flash('Inicia sesion para esta operacion!')
+    return redirect(url_for('login'))
 
 
 @bitmoney_platform.route('/login')

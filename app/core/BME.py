@@ -19,29 +19,45 @@ class bitmoney_exchange_engine():
         self.__seed = seed_address
         self.__root = root_address
 
+    def previous_hash_id(self):
+        root_hash = bitnet_db().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
+        print(alerts.good, 'Previous Hash: {}'.format(root_hash))
+        return root_hash
+
+
+    # @property
     def exchange_engine(self):
         account_status = bitnet_db().read('SELECT hash_id, amount FROM bitmoney WHERE username="{0}" '
                                           'and bitmoney_status="0" ORDER BY amount DESC'.format(self.__seed))
 
-        print(self.__network_tranx)
         bitpi = len(account_status)  # BitMoney Pieces, all values with True status.
         address_balance = 0
         counter = 0
+
         for bitmoney_data in account_status:
             counter += 1
             address_balance += bitmoney_data[1]
 
             if address_balance < self.__network_tranx:
                 pass
-            elif address_balance >= self.__network_tranx:
+
+            elif address_balance > self.__network_tranx:
                 bitmoney_return = round(address_balance - self.__network_tranx, 2)
+                hash_id = network_hash_engine((bitmoney_return, self.__nonce, self.__timestamp)).start_engine()
                 print('Bitmoney de Retorno', bitmoney_return)
                 print(address_balance, '----',self.__network_tranx)
-                hash_id = network_hash_engine((bitmoney_return, self.__nonce, self.__timestamp)).start_engine()
                 print(hash_id, self.__nonce, self.__timestamp)
                 return hash_id, self.__nonce, self.__timestamp
+
+            elif address_balance == self.__network_tranx:
+                hash_id = network_hash_engine((self.__nonce,self.__timestamp)).start_engine()
+                print(address_balance, '----', self.__network_tranx)
+                print(hash_id, self.__nonce, self.__timestamp)
+                return hash_id, self.__nonce, self.__timestamp
+
             else:
                 continue
+
             if counter == bitpi:
                 print('Need more Funds!')
                 break
@@ -74,21 +90,17 @@ class bitmoney_exchange_engine():
             print(alerts.good, 'Address Cheked')
             if self.seed_account_balance() == True:
                 print(alerts.good, 'Address has sufficient funds!')
-                self.exchange_engine()
+                # self.exchange_engine
                 print(alerts.excellent, 'The transaction was successful')
             else:
                 print(alerts.warning, 'Address does not have sufficient funds')
                 print(alerts.warning, self.__seed_balance, self.__network_tranx)
-                print(alerts.warning, 'Address Balance: {} | Funds needed: {}'.format(self.__seed_balance, str((self.__network_tranx - self.__seed_balance))))
+                print(alerts.warning, 'Address Balance: {} | Funds needed: {:.2f}'.format(self.__seed_balance, (self.__network_tranx - self.__seed_balance)))
         else:
             print(alerts.bad, 'Address invalid!')
             return False
 
 a = bitmoney_exchange_engine('canino', 'perrito', 97.1).bitmoney_transaction()
-
-
-
-
 
 
 

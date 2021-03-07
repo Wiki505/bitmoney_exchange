@@ -1,0 +1,1 @@
+INSERT INTO `bitmoney_ledger`(`start_address`, `end_address`, `bitmoney_amount`, `proof_of_work`, `tranx_nonce`, `tranx_hash_id`, `bitmoney_gold_mined`) VALUES ('seed','root',30, 4573, '8793d124-330e-4e4e-9021-dfc43a5f4472','000f6fa8a3142607f83061cf05ed725864594cd67d25f1315bd02d15d8df76e7d52a8c7830651528b1a43758c82ee002451f76addd48ae4f3411af710e6c0af3', 0.3256)
