@@ -2,7 +2,7 @@ from mysql.connector import connect
 
 class bitmoney_exchange():
     """ This class define the MySQL process for all engine """
-    def __init__(self, database_name):
+    def __init__(self):
         self.mysql_connector = connect(user='root', host='192.168.64.2', password='compass', database='bitmoney_exchange')
         self.cursor = self.mysql_connector.cursor()
 
@@ -20,7 +20,7 @@ class bitmoney_exchange():
 
 class bitmoney_network():
     """ This class define the MySQL process for all engine """
-    def __init__(self, database_name):
+    def __init__(self):
         self.mysql_connector = connect(user='root', host='192.168.64.2', password='compass', database='bitmoney_network')
         self.cursor = self.mysql_connector.cursor()
 
