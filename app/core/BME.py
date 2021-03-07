@@ -19,7 +19,7 @@ class bitmoney_exchange_engine():
         self.__seed = seed_address
         self.__root = root_address
 
-    def digital_money_action(self, amount):
+    def new_virtual_value(self, assigned_to, amount):
             #   Hash and proof of work from Bitmoney Data
 
             """
@@ -31,7 +31,7 @@ class bitmoney_exchange_engine():
                 'amount': amount,
                 'timestamp':self.__timestamp,
                 'nonce':self.__nonce,
-                'seed':self.__seed,
+                'seed': assigned_to,
             }
 
             hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
@@ -39,7 +39,6 @@ class bitmoney_exchange_engine():
             bitnet_db().read("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_in) "
                              "VALUES ('{}','{}','{}','{}')".format(hash_id, virtual_value['amount'], virtual_value['nonce'], virtual_value['seed'], virtual_value['timestamp']))
             return True
-
 
     def previous_hash_id(self):
         root_hash = bitnet_db().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
@@ -65,15 +64,22 @@ class bitmoney_exchange_engine():
             elif address_balance > self.__network_tranx:
                 bitmoney_return = round(address_balance - self.__network_tranx, 2)
 
-                # insertar nuevo bitmoney
+                # Insertando el saldo por piezas y creando una nueva pieza por cambio
+                self.new_virtual_value(self.__root, bitmoney_return)
 
+                hash_data = network_hash_engine((bitmoney_return, self.__nonce, self.__timestamp)).start_engine()
 
-                hash_id = network_hash_engine((bitmoney_return, self.__nonce, self.__timestamp)).start_engine()
+                bitmoney_gold_mined = 0
+
+                x = bitnet_db().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, tranx_nonce, timestamp, bitmoney_gold_mined) "
+                                      "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__network_tranx, self.__transaction_fees,
+                                                                                                hash_data[0], hash_data[1], self.__nonce, self.__timestamp, bitmoney_gold_mined))
+
                 print('Bitmoney de Retorno', bitmoney_return)
                 print(address_balance, '----',self.__network_tranx)
-                print(hash_id, self.__nonce, self.__timestamp)
+                print(hash_data, self.__nonce, self.__timestamp)
 
-                return hash_id, self.__nonce, self.__timestamp
+                return hash_data, self.__nonce, self.__timestamp
 
             elif address_balance == self.__network_tranx:
                 hash_id = network_hash_engine((self.__nonce,self.__timestamp)).start_engine()
