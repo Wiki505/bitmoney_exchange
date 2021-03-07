@@ -1,6 +1,6 @@
 from mysql.connector import connect
 
-class bitmoney_exchange():
+class bitex_db():
     """ This class define the MySQL process for all engine """
     def __init__(self):
         self.mysql_connector = connect(user='root', host='192.168.64.2', password='compass', database='bitmoney_exchange')
@@ -18,7 +18,7 @@ class bitmoney_exchange():
         self.cursor.close()
         return True
 
-class bitmoney_network():
+class bitnet_db():
     """ This class define the MySQL process for all engine """
     def __init__(self):
         self.mysql_connector = connect(user='root', host='192.168.64.2', password='compass', database='bitmoney_network')

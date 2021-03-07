@@ -17,7 +17,7 @@ class network_hash_engine():
     def start_engine(self):
         proof_of_work = 1
         while True:
-            if self.__hash_string[:self.__difficulty] == ('0' * self.__difficulty):
+            if self.__hash_string.startswith('0' * self.__difficulty):
                 break
             else:
                 proof_of_work += 1
