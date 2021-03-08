@@ -118,7 +118,7 @@ def bitmoney_creation():
             'timestamp': datetime.now(),
             'amount': amount,
             'nonce': str(uuid4()),
-            'seed': username,
+            'seed': 'Bitmoney_Exchange',
         }
         #   New virtual value encryption
         hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
@@ -126,7 +126,7 @@ def bitmoney_creation():
         #   Loading new virtual value on database
         run_database().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
                           "VALUES ('{}','{}','{}','{}','{}')".format(hash_id, virtual_value['amount'],
-                                                                     virtual_value['nonce'], virtual_value['seed'],
+                                                                     virtual_value['nonce'], username,
                                                                      virtual_value['timestamp']))
         flash('Dinero Digital agregado')
         return redirect(url_for('new_bitmoney'))

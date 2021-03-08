@@ -24,30 +24,25 @@ class bitmoney_exchange_engine():
     def btmoney_miner_gold(self):
         pass
 
+    def add_new_bitmoney(self, seed, root, bitmoney_amount):
+        virtual_value = {
+            'timestamp': self.__timestamp,
+            'amount': bitmoney_amount,
+            'nonce': self.__nonce,
+            'seed': seed,
+        }
+        #   New virtual value encryption
+        hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
+
+        #   Loading new virtual value on database
+        run_database().write(
+            "INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) VALUES ('{}','{}','{}','{}','{}')".format(
+                hash_id, virtual_value['amount'], virtual_value['nonce'], root, virtual_value['timestamp']))
+
     def __updating_bitmoney_status(self):
         for bitpi in self.__bitmoney_inputs:
-            print(bitpi)
-            print(self.__bitmoney_inputs)
             run_database().write("UPDATE bitmoney SET bitmoney_status='1', timestamp_output='{}' WHERE seed_address='{}' AND hash_id='{}'".format(self.__timestamp, self.__seed, bitpi))
         return True
-
-    def new_virtual_return(self, bitmoney_return):
-            #   root data for new virtual value
-            virtual_value = {
-                'timestamp': self.__timestamp,
-                'amount': bitmoney_return,
-                'nonce':self.__nonce,
-                'seed': self.__root,
-                }
-            #   New virtual value encryption
-            hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
-
-            #   Loading new virtual value on database
-            run_database().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
-                             "VALUES ('{}','{}','{}','{}','{}')".format(hash_id, virtual_value['amount'],
-                              virtual_value['nonce'], self.__seed, virtual_value['timestamp']))
-            #   Virtual value was created
-            return True
 
     def previous_hash_id(self):
         root_hash = run_database().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
@@ -77,6 +72,10 @@ class bitmoney_exchange_engine():
 
         #   updating bitmoney pieces to spend!
         self.__updating_bitmoney_status()
+        #   Transferring the bitmoney to final user
+        self.add_new_bitmoney(self.__seed, self.__root, self.__tranx_amount)
+        #   Transfering fees per transferring to the network
+        self.add_new_bitmoney(self.__seed, 'Bitmoney_Exchange', self.__tranx_amount)
 
         #   Loading all transaction data in bitmoney ledger
         x = run_database().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
@@ -102,7 +101,9 @@ class bitmoney_exchange_engine():
             elif address_balance > self.__total_tranx:
                 bitmoney_return = round(address_balance - self.__total_tranx, 2)
                 # Insertando el saldo por piezas y creando una nueva pieza por cambio
-                self.new_virtual_return(bitmoney_return)
+
+                self.add_new_bitmoney(self.__seed, self.__root, bitmoney_return)
+
                 self.__tranx_run()
                 print(self.__bitmoney_inputs)
                 return True
