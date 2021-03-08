@@ -29,23 +29,24 @@ def profile():
         return redirect(url_for('login'))
 
 
-@bitmoney_platform.route('/bitmoney_transferring')
-def bitmoney_tranfering():
+@bitmoney_platform.route('/bitmoney_tranx', methods=['POST'])
+def bitmoney_tranx():
     if 'username' in session:
-        seed = session['username']
+        seed_address = session['username']
         if request.method == 'POST':
-            root = request.form['seed_address']
-            bitmoney_amount = request.form['bitmoney_amount']
-            transfer_status = bitmoney_exchange_engine(seed, root, bitmoney_amount)
+            root_address = request.form['root_address']
+            bitmoney_amount = float(request.form['bitmoney_amount'])
+            transfer_status = bitmoney_exchange_engine(seed_address, root_address, bitmoney_amount).start_transaction()
+            print(transfer_status, "transfer status")
             if transfer_status == True:
-                flash('{} fue tranferido con éxito a {}'.format(bitmoney_amount, root))
+                flash('{} fue tranferido con éxito a {}'.format(bitmoney_amount, root_address))
                 return redirect(url_for('profile'))
             else:
-                print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
+                print(alerts.bad, 'error con la transferencia!')
                 flash('Existe un problema con tu cuenta prix!')
                 return redirect(url_for('profile'))
         else:
-            print(alerts.bad, 'Inclucion de metodo incorrecto!', request.method)
+            print(alerts.bad, 'Inclucion ddddddddde metodo incorrecto!', request.method)
             flash('Existe un problema con tu cuenta prix!')
             return redirect(url_for('profile'))
     else:

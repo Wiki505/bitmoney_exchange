@@ -2,7 +2,7 @@
 
 {% extends "layout/base.html" %}
 {% block body %}
-<form action="/bitmoney_transferring" method="POST">
+<form action="/bitmoney_tranx" method="POST">
 	<div class="login">
 		<div class="login-screen">
 			<div class="app-title">
@@ -21,9 +21,9 @@
             </div>
 			<div class="login-form">
 				<div class="control-group">
-					<input type="text" class="login-field" value="" placeholder="Enviar a:" name="seed_address" required></div>
+					<input type="text" class="login-field" value="" placeholder="Enviar a:" name="root_address" required></div>
 				<div class="control-group">
-					<input type="text" class="login-field" placeholder="monto" name="bitmoney_amount" required></div>
+					<input type="number" class="login-field" placeholder="monto" name="bitmoney_amount" required></div>
 				    <input type="submit" value="Enviar" class="btn btn-primary btn-large btn-block">
                 <div class="control-group">
 
