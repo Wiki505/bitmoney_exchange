@@ -31,13 +31,13 @@ class bitmoney_exchange_engine():
             bitnet_db().write("UPDATE bitmoney SET bitmoney_status='1' WHERE seed_address='{}' AND hash_id='{}'".format(self.__seed, bitpi))
         return True
 
-    def new_virtual_value(self, assigned_to, amount):
+    def new_virtual_value(self, bitmoney_return):
             #   root data for new virtual value
             virtual_value = {
-                'amount': amount,
-                'timestamp':self.__timestamp,
+                'timestamp': self.__timestamp,
+                'amount': bitmoney_return,
                 'nonce':self.__nonce,
-                'seed': assigned_to,
+                'seed': self.__root,
                 }
             #   New virtual value encryption
             hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
@@ -103,7 +103,7 @@ class bitmoney_exchange_engine():
             elif address_balance > self.__total_tranx:
                 bitmoney_return = round(address_balance - self.__total_tranx, 2)
                 # Insertando el saldo por piezas y creando una nueva pieza por cambio
-                self.new_virtual_value(self.__root, bitmoney_return)
+                self.new_virtual_value(bitmoney_return)
                 self.__tranx_run()
                 print(self.__bitmoney_inputs)
                 return True

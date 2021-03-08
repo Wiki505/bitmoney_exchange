@@ -22,9 +22,13 @@ def index():
 def profile():
     if 'username' in session:
         login_session = session['username']
-        bitmoney = round(bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0], 2)
-        bitmoney_gold = round(bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney_gold WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0], 2)
-        return render_template('account/profile.html', bm_balance=bitmoney, bmg_balance=bitmoney_gold, username=login_session)
+        bitmoney = bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
+        if bitmoney == None:
+            bitmoney = 0.0
+        bitmoney_gold = bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney_gold WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
+        if bitmoney_gold == None:
+            bitmoney_gold = 0.0
+        return render_template('account/profile.html', bm_balance=round(bitmoney, 2), bmg_balance=round(bitmoney_gold, 2), username=login_session)
     else:
         flash('Inicia sesion para esta operacion!')
         return redirect(url_for('login'))
@@ -102,18 +106,31 @@ def register_action():
             return redirect(url_for('register'))
 
 @bitmoney_platform.route('/new_bitmoney')
-def digital_money():
-    return render_template('digital_money.html')
+def new_bitmoney():
+    return render_template('new_bitmoney.html')
 
-@bitmoney_platform.route('/bitmoney_action', methods=['POST'])
-def digital_money_action():
+@bitmoney_platform.route('/bitmoney_creation', methods=['POST'])
+def bitmoney_creation():
 
     if request.method == 'POST':
         username = request.form['username']
         amount = request.form['amount']
-        bitmoney_exchange_engine().new_virtual_value(username, amount)
+        virtual_value = {
+            'timestamp': datetime.now(),
+            'amount': amount,
+            'nonce': str(uuid4()),
+            'seed': username,
+        }
+        #   New virtual value encryption
+        hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
+
+        #   Loading new virtual value on database
+        bitnet_db().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
+                          "VALUES ('{}','{}','{}','{}','{}')".format(hash_id, virtual_value['amount'],
+                                                                     virtual_value['nonce'], virtual_value['seed'],
+                                                                     virtual_value['timestamp']))
         flash('Dinero Digital agregado')
-        return redirect(url_for('digital_money'))
+        return redirect(url_for('new_bitmoney'))
 
 @bitmoney_platform.route('/digital_money_process', methods=['POST'])
 def digital_money_process():
