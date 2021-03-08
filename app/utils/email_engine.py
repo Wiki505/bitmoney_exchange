@@ -1,6 +1,6 @@
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeSerializer
-from app.database_engine.mysql_engine import bitex_db
+from app.database_engine.mysql_engine import run_database
 from itsdangerous.exc import BadSignature
 import app
 
@@ -44,7 +44,7 @@ def email_validation(token):
         print(err)
         return False
 
-    db_data = bitex_db().read(
+    db_data = run_database.read(
         "SELECT email, username FROM bm_users WHERE email='{}' AND USER_ID='{}'".format(email, username))
     if email == db_data[0][0] and username == db_data[0][1]:
         bitex_db().write("UPDATE bm_users SET account_status='{}' WHERE email='{}' AND USER_ID='%s'".format(1, email, username))

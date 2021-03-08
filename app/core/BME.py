@@ -3,7 +3,7 @@ from pickle import dumps
 from uuid import uuid4
 from datetime import datetime
 from app.utils.terminal_alert import alerts
-from app.database_engine.mysql_engine import bitex_db, bitnet_db
+from app.database_engine.mysql_engine import run_database
 from app.settings import bitmoney_exchange_settings
 from app.core.hash_engine import network_hash_engine
 
@@ -28,10 +28,10 @@ class bitmoney_exchange_engine():
         for bitpi in self.__bitmoney_inputs:
             print(bitpi)
             print(self.__bitmoney_inputs)
-            bitnet_db().write("UPDATE bitmoney SET bitmoney_status='1' WHERE seed_address='{}' AND hash_id='{}'".format(self.__seed, bitpi))
+            run_database().write("UPDATE bitmoney SET bitmoney_status='1', timestamp_output='{}' WHERE seed_address='{}' AND hash_id='{}'".format(self.__timestamp, self.__seed, bitpi))
         return True
 
-    def new_virtual_value(self, bitmoney_return):
+    def new_virtual_return(self, bitmoney_return):
             #   root data for new virtual value
             virtual_value = {
                 'timestamp': self.__timestamp,
@@ -43,14 +43,14 @@ class bitmoney_exchange_engine():
             hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
 
             #   Loading new virtual value on database
-            bitnet_db().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
+            run_database().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
                              "VALUES ('{}','{}','{}','{}','{}')".format(hash_id, virtual_value['amount'],
-                              virtual_value['nonce'], virtual_value['seed'], virtual_value['timestamp']))
+                              virtual_value['nonce'], self.__seed, virtual_value['timestamp']))
             #   Virtual value was created
             return True
 
     def previous_hash_id(self):
-        root_hash = bitnet_db().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
+        root_hash = run_database().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
         print(alerts.good, 'Previous Hash: {}'.format(root_hash))
         return root_hash
 
@@ -71,7 +71,7 @@ class bitmoney_exchange_engine():
 
         #   data encryption from new transaction
         hash_data_result = network_hash_engine(tranx_data).start_engine()
-
+        print(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees, hash_data_result[0], hash_data_result[1], previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp)
         #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
 
@@ -79,13 +79,13 @@ class bitmoney_exchange_engine():
         self.__updating_bitmoney_status()
 
         #   Loading all transaction data in bitmoney ledger
-        x = bitnet_db().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
+        x = run_database().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
             "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees, hash_data_result[0], hash_data_result[1],
                                                                                       previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp, bitmoney_gold_mined))
 
     # @property
     def exchange_engine(self):
-        account_status = bitnet_db().read('SELECT hash_id, amount FROM bitmoney WHERE seed_address="{0}" '
+        account_status = run_database().read('SELECT hash_id, amount FROM bitmoney WHERE seed_address="{0}" '
                                           'and bitmoney_status="0" ORDER BY amount DESC'.format(self.__seed))
 
         bitpi = len(account_status)  # BitMoney Pieces, all values with True status.
@@ -102,7 +102,7 @@ class bitmoney_exchange_engine():
             elif address_balance > self.__total_tranx:
                 bitmoney_return = round(address_balance - self.__total_tranx, 2)
                 # Insertando el saldo por piezas y creando una nueva pieza por cambio
-                self.new_virtual_value(bitmoney_return)
+                self.new_virtual_return(bitmoney_return)
                 self.__tranx_run()
                 print(self.__bitmoney_inputs)
                 return True
@@ -118,8 +118,8 @@ class bitmoney_exchange_engine():
                 break
 
     def network_address_check(self):
-        address_status = bitex_db().read("""SELECT EXISTS(SELECT account_status from bm_users WHERE username='{0}') UNION
-        SELECT EXISTS(SELECT account_status from bm_users WHERE username='{1}')""".format(self.__seed, self.__root))
+        address_status = run_database().read("""SELECT EXISTS(SELECT account_status from bitmoney_accounts WHERE username='{0}') UNION
+        SELECT EXISTS(SELECT account_status from bitmoney_accounts WHERE username='{1}')""".format(self.__seed, self.__root))
 
         if len(address_status) == 2 or address_status[0][0] == False:
             print(alerts.bad, 'Invalid account')
@@ -129,7 +129,7 @@ class bitmoney_exchange_engine():
             return True
 
     def seed_account_balance(self):
-        balance = round(bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{0}" and bitmoney_status="0"'.format(self.__seed))[0][0], 2)
+        balance = run_database().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{0}" and bitmoney_status="0"'.format(self.__seed))[0][0]
         print(alerts.bad, alerts.good, balance)
         if balance == None:
             return False
@@ -160,4 +160,4 @@ class bitmoney_exchange_engine():
 
 
 
-# bitmoney_exchange_engine('canino','perrito', 9).start_transaction()
+# bitmoney_exchange_engine('canino','perrito', 9).seed_account_balance()

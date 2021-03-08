@@ -1,7 +1,7 @@
 from os import urandom
 from flask import Flask, render_template, redirect, request, flash, url_for, session
 from mysql.connector.errors import IntegrityError
-from app.database_engine.mysql_engine import bitex_db, bitnet_db
+from app.database_engine.mysql_engine import run_database
 from app.core.hash_engine import hash_string, network_hash_engine
 from datetime import datetime
 from hashlib import sha3_512
@@ -21,10 +21,10 @@ def index():
 def profile():
     if 'username' in session:
         login_session = session['username']
-        bitmoney = bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
+        bitmoney = run_database().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
         if bitmoney == None:
             bitmoney = 0.0
-        bitmoney_gold = bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney_gold WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
+        bitmoney_gold = run_database().read('SELECT SUM(amount) as total FROM bitmoney_gold WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
         if bitmoney_gold == None:
             bitmoney_gold = 0.0
         return render_template('account/profile.html', bm_balance=round(bitmoney, 2), bmg_balance=round(bitmoney_gold, 2), username=login_session)
@@ -66,7 +66,7 @@ def login_action():
     if request.method == 'POST':
         username = request.form['username']
         password = hash_string(request.form['password'])
-        a = bitex_db().read("SELECT password FROM bm_users WHERE username='{}'".format(username))
+        a = run_database().read("SELECT password FROM bitmoney_accounts WHERE username='{}'".format(username))
         if a == []:
             flash('no existe')
             return redirect(url_for('login'))
@@ -95,7 +95,7 @@ def register_action():
         email = request.form['email']
         password = hash_string(request.form['password'])
         try:
-            bitex_db().write("INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username,email,password))
+            run_database().write("INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username,email,password))
 
             flash('todo tuani prix!')
             return redirect(url_for('login'))
@@ -124,7 +124,7 @@ def bitmoney_creation():
         hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
 
         #   Loading new virtual value on database
-        bitnet_db().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
+        run_database().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
                           "VALUES ('{}','{}','{}','{}','{}')".format(hash_id, virtual_value['amount'],
                                                                      virtual_value['nonce'], virtual_value['seed'],
                                                                      virtual_value['timestamp']))
