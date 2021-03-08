@@ -79,9 +79,8 @@ class bitmoney_exchange_engine():
         self.__updating_bitmoney_status()
 
         #   Loading all transaction data in bitmoney ledger
-        x = bitnet_db().write(
-            "INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
-            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees,hash_data_result[0], hash_data_result[1],
+        x = bitnet_db().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
+            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees, hash_data_result[0], hash_data_result[1],
                                                                                       previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp, bitmoney_gold_mined))
 
     # @property
