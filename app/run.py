@@ -1,5 +1,4 @@
 from os import urandom
-from flask_bootstrap import Bootstrap
 from flask import Flask, render_template, redirect, request, flash, url_for, session
 from mysql.connector.errors import IntegrityError
 from app.database_engine.mysql_engine import bitex_db, bitnet_db
