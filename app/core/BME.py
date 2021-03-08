@@ -12,8 +12,8 @@ digital_money_id = '715fbc5475a55d9094d397b585a429c03b2f02668eb2f28a744d5b2680c2
 class bitmoney_exchange_engine():
     def __init__(self, seed_address, root_address, tranx_amount):
         self.__tranx_amount = tranx_amount
-        self.__transaction_fees = round(tranx_amount * bitmoney_exchange_settings['TRANSACTION_FEES'], 2)
-        self.__total_tranx = round(tranx_amount + self.__transaction_fees, 2) # Total transaction, fees included
+        self.__tranx_fees = round(tranx_amount * bitmoney_exchange_settings['TRANSACTION_FEES'], 2)
+        self.__total_tranx = round(tranx_amount + self.__tranx_fees, 2) # Total transaction, fees included
         self.__timestamp = datetime.now()
         self.__nonce = str(uuid4())
         self.__seed_balance = None
@@ -56,7 +56,7 @@ class bitmoney_exchange_engine():
             'seed_address': self.__seed,
             'root_address': self.__root,
             'tranx_amount': self.__tranx_amount,
-            'tranx_fees': self.__transaction_fees,
+            'tranx_fees': self.__tranx_fees,
             'tranx_nonce': self.__nonce,
             'timestamp': self.__timestamp,
             'previous_hash': previous_hash,
@@ -66,7 +66,7 @@ class bitmoney_exchange_engine():
 
         #   data encryption from new transaction
         hash_data_result = network_hash_engine(tranx_data).start_engine()
-        print(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees, hash_data_result[0], hash_data_result[1], previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp)
+        print(self.__seed, self.__root, self.__tranx_amount, self.__tranx_fees, hash_data_result[0], hash_data_result[1], previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp)
         #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
 
@@ -75,13 +75,13 @@ class bitmoney_exchange_engine():
         #   Transferring the bitmoney to final user
         self.add_new_bitmoney(self.__seed, self.__root, self.__tranx_amount)
         #   Transfering fees per transferring to the network
-        self.add_new_bitmoney(self.__seed, 'Bitmoney_Exchange', self.__tranx_amount)
+        self.add_new_bitmoney(self.__seed, 'Bitmoney_Exchange', self.__tranx_fees)
 
         #   Loading all transaction data in bitmoney ledger
-        x = run_database().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
-            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees, hash_data_result[0], hash_data_result[1],
+        x = run_database().write("""INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
+            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')""".format(self.__seed, self.__root, self.__tranx_amount, self.__tranx_fees, hash_data_result[0], hash_data_result[1],
                                                                                       previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp, bitmoney_gold_mined))
-
+        return  True
     # @property
     def exchange_engine(self):
         account_status = run_database().read('SELECT hash_id, amount FROM bitmoney WHERE seed_address="{0}" '
