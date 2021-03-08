@@ -115,6 +115,8 @@ class bitmoney_exchange_engine():
                 print('Need more Funds!')
                 break
 
+    # ESTO ES UN COMENTARIO
+
     def network_address_check(self):
         address_status = run_database().read("""SELECT EXISTS(SELECT account_status from bitmoney_accounts WHERE username='{0}') UNION
         SELECT EXISTS(SELECT account_status from bitmoney_accounts WHERE username='{1}')""".format(self.__seed, self.__root))
