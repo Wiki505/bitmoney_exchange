@@ -21,9 +21,6 @@ class bitmoney_exchange_engine():
         self.__root = root_address
         self.__bitmoney_inputs = {}
 
-    def btmoney_miner_gold(self):
-        pass
-
     def add_new_bitmoney(self, seed, root, bitmoney_amount):
         virtual_value = {
             'timestamp': self.__timestamp,
