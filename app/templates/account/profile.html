@@ -7,8 +7,8 @@
 		<div class="login-screen">
 			<div class="app-title">
 				<h1>{{ username }}</h1>
-                <h4>Bitmoney: C$ {{ balance[0][0] }}</h4>
-                <h4>BM Gold: BMG$ {{ balance[0][1] }}</h4>
+                <h4>Bitmoney: C$ {{ bm_balance }}</h4>
+                <h4>BM Gold: BMG$ {{ bmg_balance }}</h4>
 			</div>
             <div>
                 {% with messages = get_flashed_messages() %}
@@ -21,9 +21,9 @@
             </div>
 			<div class="login-form">
 				<div class="control-group">
-					<input type="text" class="login-field" value="" placeholder="Enviar a:" name="seed_address"></div>
+					<input type="text" class="login-field" value="" placeholder="Enviar a:" name="seed_address" required></div>
 				<div class="control-group">
-					<input type="text" class="login-field" placeholder="monto" name="bitmoney_amount" ></div>
+					<input type="text" class="login-field" placeholder="monto" name="bitmoney_amount" required></div>
 				    <input type="submit" value="Enviar" class="btn btn-primary btn-large btn-block">
                 <div class="control-group">
 

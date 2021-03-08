@@ -140,9 +140,5 @@ class bitmoney_exchange_engine():
 
 
 
-a = bitmoney_exchange_engine('canino', 'perrito', 97.1).bitmoney_transaction()
-
-
-
 
 

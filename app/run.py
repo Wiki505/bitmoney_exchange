@@ -15,18 +15,15 @@ bitmoney_platform = Flask(__name__)
 
 @bitmoney_platform.route('/')
 def index():
-    return redirect('http://0.0.0.0:1080/register')
+    return redirect('http://0.0.0.0:1080/login')
 
 @bitmoney_platform.route('/profile')
 def profile():
     if 'username' in session:
         login_session = session['username']
-        print(type(login_session))
-        bitmoney_network_balance = bitnet_db().read(
-            'SELECT SUM(amount) as total FROM bitmoney WHERE username="{username_session}" and status="0" UNION '
-            'SELECT SUM(amount) as total FROM bitmoney_gold WHERE username="{username_session}" and status="0"'.format(username_session=login_session))
-        print(bitmoney_network_balance)
-        return render_template('account/home.html', balance=bitmoney_network_balance, username=login_session)
+        bitmoney = round(bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0], 2)
+        bitmoney_gold = round(bitnet_db().read('SELECT SUM(amount) as total FROM bitmoney_gold WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0], 2)
+        return render_template('account/profile.html', bm_balance=bitmoney, bmg_balance=bitmoney_gold, username=login_session)
     else:
         flash('Inicia sesion para esta operacion!')
         return redirect(url_for('login'))
@@ -59,7 +56,7 @@ def bitmoney_tranfering():
 def login():
     return render_template('account/login.html')
 
-@bitmoney_platform.route('/login_action', methods=['POST'])
+@bitmoney_platform.route('/init_session', methods=['POST'])
 def login_action():
     if request.method == 'POST':
         username = request.form['username']
@@ -72,7 +69,7 @@ def login_action():
             print(a[0][0])
             session['username'] = username
             flash('simon')
-            return redirect(url_for('home'))
+            return redirect(url_for('profile'))
         else:
             print(a)
             flash(a)
