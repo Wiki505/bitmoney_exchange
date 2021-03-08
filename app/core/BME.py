@@ -19,21 +19,21 @@ class bitmoney_exchange_engine():
         self.__seed = seed_address
         self.__root = root_address
 
+    def btmoney_miner_gold(self):
+        pass
+
     def new_virtual_value(self, assigned_to, amount):
-            #   Hash and proof of work from Bitmoney Data
-            """
-            Por motivos de seguridad a la hora de encriptar el valor virtual, se incluyen los valores
-            timestamp y el uuid de la transaccion realizada, y no via predefinida en la db timestamp.
-            """
+            #   root data for new virtual value
             virtual_value = {
                 'amount': amount,
                 'timestamp':self.__timestamp,
                 'nonce':self.__nonce,
                 'seed': assigned_to,
-            }
-
+                }
+            #   New virtual value encryption
             hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
 
+            #   Loading new virtual value on database
             bitnet_db().read("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_in) "
                              "VALUES ('{}','{}','{}','{}')".format(hash_id, virtual_value['amount'], virtual_value['nonce'], virtual_value['seed'], virtual_value['timestamp']))
             return True
@@ -43,8 +43,8 @@ class bitmoney_exchange_engine():
         print(alerts.good, 'Previous Hash: {}'.format(root_hash))
         return root_hash
 
-    def tranx_run(self):
-
+    def __tranx_run(self):
+        # Previous transaction hash for chain the new transaction
         previous_hash = self.previous_hash_id()
         tranx_data = {
             'seed_address': self.__seed,
@@ -55,12 +55,15 @@ class bitmoney_exchange_engine():
             'timestamp': self.__timestamp,
             'previous_hash': previous_hash,
             'bitmoney_gold_mined': 0,
-        }
+            }
 
+        #   data encryption from new transaction
         hash_data_result = network_hash_engine(tranx_data).start_engine()
 
+        #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
 
+        #   Loading all transaction data in bitmoney ledger
         x = bitnet_db().write(
             "INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, tranx_nonce, timestamp, bitmoney_gold_mined) "
             "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__network_tranx,
@@ -88,10 +91,10 @@ class bitmoney_exchange_engine():
                 bitmoney_return = round(address_balance - self.__network_tranx, 2)
                 # Insertando el saldo por piezas y creando una nueva pieza por cambio
                 self.new_virtual_value(self.__root, bitmoney_return)
-                self.tranx_run()
+                self.__tranx_run()
                 return True
             elif address_balance == self.__network_tranx:
-                self.tranx_run()
+                self.__tranx_run()
                 return True
             else:
                 continue
