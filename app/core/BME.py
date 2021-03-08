@@ -19,10 +19,17 @@ class bitmoney_exchange_engine():
         self.__seed_balance = None
         self.__seed = seed_address
         self.__root = root_address
-        self.__bitmoney_inputs = []
+        self.__bitmoney_inputs = {}
 
     def btmoney_miner_gold(self):
         pass
+
+    def __updating_bitmoney_status(self):
+        for bitpi in self.__bitmoney_inputs:
+            print(bitpi)
+            print(self.__bitmoney_inputs)
+            bitnet_db().write("UPDATE bitmoney SET bitmoney_status='1' WHERE seed_address='{}' AND hash_id='{}'".format(self.__seed, bitpi))
+        return True
 
     def new_virtual_value(self, assigned_to, amount):
             #   root data for new virtual value
@@ -68,16 +75,14 @@ class bitmoney_exchange_engine():
         #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
 
-        bitnet_db().write("")
+        #   updating bitmoney pieces to spend!
+        self.__updating_bitmoney_status()
 
         #   Loading all transaction data in bitmoney ledger
         x = bitnet_db().write(
-            "INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs. tranx_nonce, timestamp, bitmoney_gold_mined) "
-            "VALUES ('{}', '{}','{}','{}','{}','{}','{}','{}','{}','{}', '{}')".format(self.__seed, self.__root, self.__tranx_amount,
-                                                                      self.__transaction_fees,
-                                                                      hash_data_result[0], hash_data_result[1], previous_hash,
-                                                                      self.__bitmoney_inputs, self.__nonce, self.__timestamp,
-                                                                      bitmoney_gold_mined))
+            "INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
+            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(self.__seed, self.__root, self.__tranx_amount, self.__transaction_fees,hash_data_result[0], hash_data_result[1],
+                                                                                      previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp, bitmoney_gold_mined))
 
     # @property
     def exchange_engine(self):
@@ -89,7 +94,7 @@ class bitmoney_exchange_engine():
         counter = 0
 
         for bitmoney_data in account_status:
-            self.__bitmoney_inputs.append(bitmoney_data)
+            self.__bitmoney_inputs[bitmoney_data[0]]=bitmoney_data[1]
             counter += 1
             address_balance += bitmoney_data[1]
 
@@ -156,4 +161,4 @@ class bitmoney_exchange_engine():
 
 
 
-bitmoney_exchange_engine('canino','perrito', 5).start_transaction()
+# bitmoney_exchange_engine('canino','perrito', 9).start_transaction()

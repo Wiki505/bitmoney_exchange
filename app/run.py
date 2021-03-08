@@ -5,6 +5,7 @@ from mysql.connector.errors import IntegrityError
 from app.database_engine.mysql_engine import bitex_db, bitnet_db
 from app.core.hash_engine import hash_string, network_hash_engine
 from datetime import datetime
+from hashlib import sha3_512
 from uuid import uuid4
 from app.core.BME import bitmoney_exchange_engine
 from app.utils import email_engine
@@ -91,7 +92,7 @@ def register_action():
         email = request.form['email']
         password = hash_string(request.form['password'])
         try:
-            mysql_control('bitmoney_exchange').write("INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username,email,password))
+            bitex_db().write("INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username,email,password))
 
             flash('todo tuani prix!')
             return redirect(url_for('login'))
@@ -100,7 +101,7 @@ def register_action():
             flash('ya existe el chamaco')
             return redirect(url_for('register'))
 
-@bitmoney_platform.route('/bitmoney_money')
+@bitmoney_platform.route('/new_bitmoney')
 def digital_money():
     return render_template('digital_money.html')
 
@@ -108,21 +109,9 @@ def digital_money():
 def digital_money_action():
 
     if request.method == 'POST':
-        bmd = {
-            'timestamp': str(datetime.now()),
-            'username': request.form['username'],
-            'amount': request.form['amount'],
-            'difficulty': 1,
-            'nonce': str(uuid4())
-            }
-        print(bmd)
-
-        #   Hash and proof of work from Bitmoney Data
-        hash_data = network_hash_engine(1, bmd).start_engine()
-
-        mysql_control('bitmoney_network').write("INSERT INTO bitokens(hash_id, proof_of_work, difficulty, amount, nonce, username, timestamp) "
-        "VALUES ('{}','{}','{}','{}','{}','{}','{}')".format(hash_data[1], hash_data[0], bmd['difficulty'], bmd['amount'], bmd['nonce'], bmd['username'], bmd['timestamp']))
-
+        username = request.form['username']
+        amount = request.form['amount']
+        bitmoney_exchange_engine().new_virtual_value(username, amount)
         flash('Dinero Digital agregado')
         return redirect(url_for('digital_money'))
 
