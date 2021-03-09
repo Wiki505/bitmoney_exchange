@@ -26,14 +26,13 @@ class bitmoney_exchange_engine():
     def __updating_bitmoney_status(self):
         for bitpi in self.__bitmoney_inputs:
             run_database().write("UPDATE bitmoney SET bitmoney_status='1', timestamp_output='{}' WHERE seed_address='{}' AND hash_id='{}'".format(self.__timestamp, self.__seed, bitpi))
-        return True
 
     def previous_hash_id(self):
         root_hash = run_database().read("SELECT tranx_hash_id FROM bitmoney_ledger ORDER BY id DESC LIMIT 1")[0][0]
         print(alerts.good, 'Previous Hash: {}'.format(root_hash))
         return root_hash
 
-    def __tranx_run(self):
+    def __process_tranx(self):
         # Previous transaction hash for chain the new transaction
         previous_hash = self.previous_hash_id()
         tranx_data = {
@@ -50,16 +49,16 @@ class bitmoney_exchange_engine():
 
         #   data encryption from new transaction
         hash_data_result = network_hash_engine(tranx_data).start_engine()
-        print(self.__seed, self.__root, self.__tranx_amount, self.__tranx_fees, hash_data_result[0], hash_data_result[1], previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp)
+        # print(self.__seed, self.__root, self.__tranx_amount, self.__tranx_fees, hash_data_result[0], hash_data_result[1], previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp)
         #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
 
         #   updating bitmoney pieces to spend!
         self.__updating_bitmoney_status()
         #   Transferring the bitmoney to final user
-        self.add_new_bitmoney(self.__seed, self.__root, self.__tranx_amount)
+        bitmoney_value(self.__seed, self.__tranx_amount, tranx_nonce=self.__nonce)
         #   Transfering fees per transferring to the network
-        self.add_new_bitmoney(self.__seed, 'Bitmoney_Exchange', self.__tranx_fees)
+        bitmoney_value('Bitmoney_Exchange', self.__tranx_fees, tranx_nonce=self.__nonce)
 
         #   Loading all transaction data in bitmoney ledger
         x = run_database().write("""INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
@@ -67,7 +66,7 @@ class bitmoney_exchange_engine():
                                                                                       previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp, bitmoney_gold_mined))
         return  True
     # @property
-    def exchange_engine(self):
+    def start_engine(self):
         account_status = run_database().read('SELECT hash_id, amount FROM bitmoney WHERE seed_address="{0}" '
                                           'and bitmoney_status="0" ORDER BY amount DESC'.format(self.__seed))
 
@@ -90,25 +89,26 @@ class bitmoney_exchange_engine():
             elif address_balance > self.__total_tranx:
                 #   se calcula el monto de retorno
                 bitmoney_return = round(address_balance - self.__total_tranx, 2)
-                # Insertando el saldo por piezas y creando una nueva pieza por cambio
+                #  creando una nueva pieza por retorno de la transaccion
                 bitmoney_value(self.__seed, bitmoney_return, tranx_nonce=self.__nonce)
+                #   procesando la transaccion
+                self.__process_tranx()
 
-                self.__tranx_run()
-
-                print(self.__bitmoney_inputs)
                 return True
+            #   si el balance general es igual al monto de la transaccion, procesar
             elif address_balance == self.__total_tranx:
-                self.__tranx_run()
+                #   procesando la transaccion
+                self.__process_tranx()
                 print(self.__bitmoney_inputs)
                 return True
             else:
                 continue
 
+            #   si el contador es igual a la cantidad de piezas,
+            #   los fonsos son isuficientes, necesita recargar valores
             if counter == bitpi:
                 print('Need more Funds!')
                 break
-
-    # ESTO ES UN COMENTARIO
 
     def network_address_check(self):
         address_status = run_database().read("""SELECT EXISTS(SELECT account_status from bitmoney_accounts WHERE username='{0}') UNION
