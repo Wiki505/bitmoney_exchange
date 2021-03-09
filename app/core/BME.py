@@ -13,7 +13,6 @@ digital_money_id = '715fbc5475a55d9094d397b585a429c03b2f02668eb2f28a744d5b2680c2
 
 class bitmoney_exchange_engine():
     def __init__(self, seed_address, root_address, tranx_amount):
-        self.__tranx_amount = tranx_amount
         self.__tranx_fees = round(tranx_amount * bitmoney_exchange_settings['TRANSACTION_FEES'], 2)
         self.__total_tranx = round(tranx_amount + self.__tranx_fees, 2) # Total transaction, fees included
         self.__timestamp = datetime.now()
@@ -38,7 +37,7 @@ class bitmoney_exchange_engine():
         tranx_data = {
             'seed_address': self.__seed,
             'root_address': self.__root,
-            'tranx_amount': self.__tranx_amount,
+            'tranx_amount': tranx_amount,
             'tranx_fees': self.__tranx_fees,
             'tranx_nonce': self.__nonce,
             'timestamp': self.__timestamp,
@@ -53,9 +52,7 @@ class bitmoney_exchange_engine():
         #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
 
-        #   updating bitmoney pieces to spend!
-        self.__updating_bitmoney_status()
-        #   Transferring the bitmoney to final user
+
         bitmoney_value(self.__seed, self.__tranx_amount, tranx_nonce=self.__nonce)
         #   Transfering fees per transferring to the network
         bitmoney_value('Bitmoney_Exchange', self.__tranx_fees, tranx_nonce=self.__nonce)
@@ -87,6 +84,8 @@ class bitmoney_exchange_engine():
             #   si el balance general es mayor al total de la transaccion, procesar transaccion,
             #   agregar Nonce de la transaccion al bitmoney de retorno
             elif address_balance > self.__total_tranx:
+                #   updating bitmoney pieces to spend!
+                self.__updating_bitmoney_status()
                 #   se calcula el monto de retorno
                 bitmoney_return = round(address_balance - self.__total_tranx, 2)
                 #  creando una nueva pieza por retorno de la transaccion
@@ -98,6 +97,9 @@ class bitmoney_exchange_engine():
             #   si el balance general es igual al monto de la transaccion, procesar
             elif address_balance == self.__total_tranx:
                 #   procesando la transaccion
+                #   updating bitmoney pieces to spend!
+                self.__updating_bitmoney_status()
+                #   Transferring the bitmoney to final user
                 self.__process_tranx()
                 print(self.__bitmoney_inputs)
                 return True
@@ -132,23 +134,23 @@ class bitmoney_exchange_engine():
         elif balance < self.__total_tranx:
             self.__seed_balance = balance
             return False
-
-    def start_transaction(self):
-        if self.network_address_check() == True:
-            print(alerts.good, 'Address Cheked')
-            if self.seed_account_balance() == True:
-                print(alerts.good, 'Address has sufficient funds!')
-                self.exchange_engine()
-                print(alerts.excellent, 'The transaction was successful')
-                return True
-            else:
-                print(alerts.warning, 'Address does not have sufficient funds')
-                print(alerts.warning, self.__seed_balance, self.__total_tranx)
-                print(alerts.warning, 'Address Balance: {} | Funds needed: {:.2f}'.format(self.__seed_balance, (self.__total_tranx - self.__seed_balance)))
-                return False
-        else:
-            print(alerts.bad, 'Address invalid!')
-            return False
+    #
+    # def start_transaction(self):
+    #     if self.network_address_check() == True:
+    #         print(alerts.good, 'Address Cheked')
+    #         if self.seed_account_balance() == True:
+    #             print(alerts.good, 'Address has sufficient funds!')
+    #             self.exchange_engine()
+    #             print(alerts.excellent, 'The transaction was successful')
+    #             return True
+    #         else:
+    #             print(alerts.warning, 'Address does not have sufficient funds')
+    #             print(alerts.warning, self.__seed_balance, self.__total_tranx)
+    #             print(alerts.warning, 'Address Balance: {} | Funds needed: {:.2f}'.format(self.__seed_balance, (self.__total_tranx - self.__seed_balance)))
+    #             return False
+    #     else:
+    #         print(alerts.bad, 'Address invalid!')
+    #         return False
 
 
 
