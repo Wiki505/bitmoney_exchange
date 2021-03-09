@@ -5,6 +5,7 @@ from app.database_engine.mysql_engine import run_database
 from app.core.hash_engine import hash_string, network_hash_engine
 from datetime import datetime
 from hashlib import sha3_512
+from app.core.bitmoney_generator import bitmoney_value
 from uuid import uuid4
 from app.core.BME import bitmoney_exchange_engine
 from app.utils import email_engine
@@ -108,26 +109,13 @@ def register_action():
 def new_bitmoney():
     return render_template('new_bitmoney.html')
 
-@bitmoney_platform.route('/bitmoney_creation', methods=['POST'])
+@bitmoney_platform.route('/create_bitmoney', methods=['POST'])
 def bitmoney_creation():
 
     if request.method == 'POST':
-        username = request.form['username']
-        amount = request.form['amount']
-        virtual_value = {
-            'timestamp': datetime.now(),
-            'amount': amount,
-            'nonce': str(uuid4()),
-            'seed': 'Bitmoney_Exchange',
-        }
-        #   New virtual value encryption
-        hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
-
-        #   Loading new virtual value on database
-        run_database().write("INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) "
-                          "VALUES ('{}','{}','{}','{}','{}')".format(hash_id, virtual_value['amount'],
-                                                                     virtual_value['nonce'], username,
-                                                                     virtual_value['timestamp']))
+        seed_address = request.form['seed_address']
+        bitmoney_amount = request.form['amount']
+        bitmoney_value(seed_address, bitmoney_amount)
         flash('Dinero Digital agregado')
         return redirect(url_for('new_bitmoney'))
 

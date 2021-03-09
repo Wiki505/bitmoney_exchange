@@ -1,10 +1,12 @@
 from hashlib import sha3_512
 from pickle import dumps
+from app.core.bitmoney_generator import bitmoney_value
 from uuid import uuid4
 from datetime import datetime
 from app.utils.terminal_alert import alerts
 from app.database_engine.mysql_engine import run_database
 from app.settings import bitmoney_exchange_settings
+from app.core.bitmoney_generator import bitmoney_value
 from app.core.hash_engine import network_hash_engine
 
 digital_money_id = '715fbc5475a55d9094d397b585a429c03b2f02668eb2f28a744d5b2680c2873408864e34c08be26fceac8deb9ee25172150cce9b2e045919f665275e4f9f8f93'
@@ -20,21 +22,6 @@ class bitmoney_exchange_engine():
         self.__seed = seed_address
         self.__root = root_address
         self.__bitmoney_inputs = {}
-
-    def add_new_bitmoney(self, seed, root, bitmoney_amount):
-        virtual_value = {
-            'timestamp': self.__timestamp,
-            'amount': bitmoney_amount,
-            'nonce': self.__nonce,
-            'seed': seed,
-        }
-        #   New virtual value encryption
-        hash_id = sha3_512(str(virtual_value).encode('utf-8')).hexdigest()
-
-        #   Loading new virtual value on database
-        run_database().write(
-            "INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) VALUES ('{}','{}','{}','{}','{}')".format(
-                hash_id, virtual_value['amount'], virtual_value['nonce'], root, virtual_value['timestamp']))
 
     def __updating_bitmoney_status(self):
         for bitpi in self.__bitmoney_inputs:
@@ -89,19 +76,25 @@ class bitmoney_exchange_engine():
         counter = 0
 
         for bitmoney_data in account_status:
+            #   se agrega cada valor virtual a la suma transaccional
             self.__bitmoney_inputs[bitmoney_data[0]]=bitmoney_data[1]
+            #   se cuenta cada pieza de valor
             counter += 1
+            #   se suma el valor de cada pieza al balance general de la cuenta
             address_balance += bitmoney_data[1]
-
+            #   si el balance general es menor al total de la transaccion, pasa para sumar otra pieza
             if address_balance < self.__total_tranx:
                 pass
+            #   si el balance general es mayor al total de la transaccion, procesar transaccion,
+            #   agregar Nonce de la transaccion al bitmoney de retorno
             elif address_balance > self.__total_tranx:
+                #   se calcula el monto de retorno
                 bitmoney_return = round(address_balance - self.__total_tranx, 2)
                 # Insertando el saldo por piezas y creando una nueva pieza por cambio
-
-                self.add_new_bitmoney(self.__seed, self.__root, bitmoney_return)
+                bitmoney_value(self.__seed, bitmoney_return, tranx_nonce=self.__nonce)
 
                 self.__tranx_run()
+
                 print(self.__bitmoney_inputs)
                 return True
             elif address_balance == self.__total_tranx:
