@@ -16,7 +16,7 @@ bitmoney_platform = Flask(__name__)
 
 @bitmoney_platform.route('/')
 def index():
-    return redirect('http://0.0.0.0:1080/login')
+    return 'TEST OK'
 
 
 @bitmoney_platform.route('/profile')

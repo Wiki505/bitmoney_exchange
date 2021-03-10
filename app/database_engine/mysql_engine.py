@@ -24,3 +24,4 @@ class run_database():
         self.mysql_connector.commit()
         self.cursor.close()
         return True
+
