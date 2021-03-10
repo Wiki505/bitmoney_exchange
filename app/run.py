@@ -1,16 +1,15 @@
-from os import urandom
+from app.database_engine.mysql_query import bitmoney_account_balance, bitmoney_gold_account_balance
 from flask import Flask, render_template, redirect, request, flash, url_for, session
-from mysql.connector.errors import IntegrityError
 from app.database_engine.mysql_engine import run_database
-from app.core.hash_engine import hash_string, network_hash_engine
-from datetime import datetime
-from hashlib import sha3_512
-from app.core.bitmoney_generator import bitmoney_value
-from uuid import uuid4
+from mysql.connector.errors import IntegrityError
 from app.core.BME import bitmoney_exchange_engine
-from app.utils import email_engine
+from app.core.hash_engine import hash_string
 from app.utils.terminal_alert import alerts
+from os import urandom
+
 bitmoney_platform = Flask(__name__)
+
+
 # bootstrap = Bootstrap()
 # bitmoney_platform.config['SECRET_KEY'] = urandom(12)
 
@@ -18,17 +17,19 @@ bitmoney_platform = Flask(__name__)
 def index():
     return redirect('http://0.0.0.0:1080/login')
 
+
 @bitmoney_platform.route('/profile')
 def profile():
     if 'username' in session:
         login_session = session['username']
-        bitmoney = run_database().read('SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
+        bitmoney = run_database().read(bitmoney_account_balance.format(login_session))[0][0]
         if bitmoney == None:
             bitmoney = 0.0
-        bitmoney_gold = run_database().read('SELECT SUM(amount) as total FROM bitmoney_gold WHERE seed_address="{username_session}" and bitmoney_status="0"'.format(username_session=login_session))[0][0]
+        bitmoney_gold = run_database().read(bitmoney_gold_account_balance.format(login_session))[0][0]
         if bitmoney_gold == None:
             bitmoney_gold = 0.0
-        return render_template('account/profile.html', bm_balance=round(bitmoney, 2), bmg_balance=round(bitmoney_gold, 2), username=login_session)
+        return render_template('account/profile.html', bm_balance=round(bitmoney, 2),
+                               bmg_balance=round(bitmoney_gold, 2), username=login_session)
     else:
         flash('Inicia sesion para esta operacion!')
         return redirect(url_for('login'))
@@ -41,7 +42,7 @@ def bitmoney_tranx():
         if request.method == 'POST':
             root_address = request.form['root_address']
             bitmoney_amount = float(request.form['bitmoney_amount'])
-            transfer_status = bitmoney_exchange_engine(seed_address, root_address, bitmoney_amount).start_transaction()
+            transfer_status = bitmoney_exchange_engine(seed_address, root_address, bitmoney_amount)
             print(transfer_status, "transfer status")
             if transfer_status == True:
                 flash('{} fue tranferido con éxito a {}'.format(bitmoney_amount, root_address))
@@ -58,9 +59,11 @@ def bitmoney_tranx():
         flash('Inicia sesion para esta operacion!')
         return redirect(url_for('login'))
 
+
 @bitmoney_platform.route('/login')
 def login():
     return render_template('account/login.html')
+
 
 @bitmoney_platform.route('/init_session', methods=['POST'])
 def login_action():
@@ -85,9 +88,11 @@ def login_action():
         flash('Existe un problema con tu cuenta prix!')
         return redirect(url_for('profile'))
 
+
 @bitmoney_platform.route('/register')
 def register():
     return render_template('account/register.html')
+
 
 @bitmoney_platform.route('/register_action', methods=['POST'])
 def register_action():
@@ -96,7 +101,9 @@ def register_action():
         email = request.form['email']
         password = hash_string(request.form['password'])
         try:
-            run_database().write("INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username,email,password))
+            run_database().write(
+                "INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username, email,
+                                                                                                 password))
 
             flash('todo tuani prix!')
             return redirect(url_for('login'))
@@ -105,19 +112,21 @@ def register_action():
             flash('ya existe el chamaco')
             return redirect(url_for('register'))
 
+
 @bitmoney_platform.route('/new_bitmoney')
 def new_bitmoney():
     return render_template('new_bitmoney.html')
 
+
 @bitmoney_platform.route('/create_bitmoney', methods=['POST'])
 def bitmoney_creation():
-
     if request.method == 'POST':
         seed_address = request.form['seed_address']
         bitmoney_amount = request.form['amount']
         bitmoney_value(seed_address, bitmoney_amount)
         flash('Dinero Digital agregado')
         return redirect(url_for('new_bitmoney'))
+
 
 @bitmoney_platform.route('/digital_money_process', methods=['POST'])
 def digital_money_process():
@@ -129,10 +138,10 @@ def digital_money_process():
 def page_not_found(e):
     return render_template('errors/404.html')
 
+
 @bitmoney_platform.errorhandler(500)
 def internal_server_error(e):
     return render_template('errors/500.html')
-
 
 
 if __name__ == "__main__":
