@@ -6,7 +6,7 @@ from app.utils.terminal_alert import alerts
 from app.database_engine.mysql_engine import run_database
 from app.database_engine.mysql_query import cheking_address, previous_tranx_hash, updating_status
 from app.settings import bitmoney_exchange_settings
-from app.core.bitmoney_generator import bitmoney_value_generator
+from app.core.bitmoney_generator import virtual_value_generator
 from app.core.hash_engine import network_hash_engine
 from json import dumps
 digital_money_id = '715fbc5475a55d9094d397b585a429c03b2f02668eb2f28a744d5b2680c2873408864e34c08be26fceac8deb9ee25172150cce9b2e045919f665275e4f9f8f93'
@@ -122,11 +122,11 @@ class bitmoney_exchange_engine():
                 #   se calcula el monto de retorno
                 bitmoney_return = round(account_balance - self.total_tranx, 2)
                 #  creando una nueva pieza por retorno de la transaccion
-                bitmoney_value_generator(self.seed, bitmoney_return, tranx_nonce=self.nonce)
+                virtual_value_generator(self.seed, bitmoney_return, tranx_nonce=self.nonce)
 
-                bitmoney_value_generator(self.root, self.tranx_amount, tranx_nonce=self.nonce)
+                virtual_value_generator(self.root, self.tranx_amount, tranx_nonce=self.nonce)
                 #   Transfering fees per transferring to the network
-                bitmoney_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
+                virtual_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
 
                 #   Loading all transaction data in bitmoney ledger
                 #   processed the transaction
@@ -140,9 +140,9 @@ class bitmoney_exchange_engine():
                 self.updating_bitmoney_status_spend()
                 #   Transferring the bitmoney to final user
 
-                bitmoney_value_generator(self.root, self.tranx_amount, tranx_nonce=self.nonce)
+                virtual_value_generator(self.root, self.tranx_amount, tranx_nonce=self.nonce)
                 #   Transfering fees per transferring to the network
-                bitmoney_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
+                virtual_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
 
                 self.process_tranx()
                 print(self.bitmoney_inputs)
@@ -174,4 +174,3 @@ class bitmoney_exchange_engine():
             print(alerts.bad, 'Address invalid!')
             return False
 
-# bitmoney_exchange_engine('canino','perrito', 9).seed_account_balance()

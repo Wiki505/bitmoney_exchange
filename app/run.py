@@ -4,6 +4,7 @@ from app.database_engine.mysql_engine import run_database
 from mysql.connector.errors import IntegrityError
 from app.core.BME import bitmoney_exchange_engine
 from app.core.hash_engine import hash_string
+from app.core.bitmoney_generator import virtual_value_generator
 from app.utils.terminal_alert import alerts
 from os import urandom
 
@@ -101,9 +102,7 @@ def register_action():
         email = request.form['email']
         password = hash_string(request.form['password'])
         try:
-            run_database().write(
-                "INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username, email,
-                                                                                                 password))
+            run_database().write("INSERT INTO bm_users(username, email, password) VALUES ('{}','{}','{}')".format(username, email, password))
 
             flash('todo tuani prix!')
             return redirect(url_for('login'))
@@ -123,7 +122,7 @@ def bitmoney_creation():
     if request.method == 'POST':
         seed_address = request.form['seed_address']
         bitmoney_amount = request.form['amount']
-        bitmoney_value(seed_address, bitmoney_amount)
+        virtual_value_generator(seed_address, bitmoney_amount)
         flash('Dinero Digital agregado')
         return redirect(url_for('new_bitmoney'))
 

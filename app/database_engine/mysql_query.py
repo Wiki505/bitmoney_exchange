@@ -1,6 +1,6 @@
 
 #   bitmoney generator query "bm_generator"
-bitmoney_generator = "INSERT INTO bitmoney(hash_id, amount, nonce, seed_address, timestamp_input) VALUES ('{}','{}','{}','{}','{}')"
+bitmoney_generator = "INSERT INTO bitmoney(seed_type, hash_id, amount, nonce, seed_address, timestamp_input) VALUES ('{}','{}','{}','{}','{}','{}')"
 
 #   Loading account balance on profile view - RUN.PY
 bitmoney_account_balance = 'SELECT SUM(amount) as total FROM bitmoney WHERE seed_address="{}" and bitmoney_status="0"'
