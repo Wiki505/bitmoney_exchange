@@ -27,6 +27,10 @@ def bitmoney_value_generator(seed_address, bitmoney_amount, tranx_nonce=None):
     else:
         pass
 
-    hash_id = sha3_512(pickle.dumps((bitmoney_value_data))).hexdigest()
-    run_database().write(bitmoney_generator.format(hash_id, bitmoney_value_data['bitmoney_amount'],
-                                                   bitmoney_value_data['nonce'],bitmoney_value_data['timestamp']))
+    hash_id = sha3_512(pickle.dumps(bitmoney_value_data)).hexdigest()
+    run_database().write(bitmoney_generator.format(
+        hash_id,
+        bitmoney_value_data['bitmoney_amount'],
+        bitmoney_value_data['tranx_nonce'],
+        bitmoney_value_data['seed_address'],
+        bitmoney_value_data['timestamp']))

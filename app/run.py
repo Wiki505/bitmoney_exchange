@@ -42,7 +42,7 @@ def bitmoney_tranx():
         if request.method == 'POST':
             root_address = request.form['root_address']
             bitmoney_amount = float(request.form['bitmoney_amount'])
-            transfer_status = bitmoney_exchange_engine(seed_address, root_address, bitmoney_amount)
+            transfer_status = bitmoney_exchange_engine(seed_address, root_address, bitmoney_amount).start_transaction()
             print(transfer_status, "transfer status")
             if transfer_status == True:
                 flash('{} fue tranferido con éxito a {}'.format(bitmoney_amount, root_address))

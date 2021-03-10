@@ -8,7 +8,7 @@ from app.database_engine.mysql_query import cheking_address, previous_tranx_hash
 from app.settings import bitmoney_exchange_settings
 from app.core.bitmoney_generator import bitmoney_value_generator
 from app.core.hash_engine import network_hash_engine
-
+from json import dumps
 digital_money_id = '715fbc5475a55d9094d397b585a429c03b2f02668eb2f28a744d5b2680c2873408864e34c08be26fceac8deb9ee25172150cce9b2e045919f665275e4f9f8f93'
 
 
@@ -79,22 +79,19 @@ class bitmoney_exchange_engine():
         # print(self.__seed, self.__root, self.__tranx_amount, self.__tranx_fees, hash_data_result[0], hash_data_result[1], previous_hash, self.__bitmoney_inputs, self.__nonce, self.__timestamp)
         #   bitmoney_gold mined from transaction
         bitmoney_gold_mined = 0
+        #
+        # bitmoney_value_generator(self.seed, self.tranx_amount, tranx_nonce=self.nonce)
+        # #   Transfering fees per transferring to the network
+        # bitmoney_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
+        #
 
-        bitmoney_value_generator(self.seed, self.tranx_amount, tranx_nonce=self.nonce)
-        #   Transfering fees per transferring to the network
-        bitmoney_value_generator('Bitmoney_Exchange', self.tranx_fees, tranx_nonce=self.nonce)
+        print(self.seed, self.root, self.tranx_amount, self.tranx_fees, hash_data_result[0], self.nonce, hash_data_result[1], previous_hash, self.bitmoney_inputs, self.timestamp, bitmoney_gold_mined)
 
-        #   Loading all transaction data in bitmoney ledger
-        run_database().write("""INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_hash_id, previous_hash, inputs, tranx_nonce, timestamp, bitmoney_gold_mined) "
-            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')""".format(self.seed, self.root,
-                                                                                       self.tranx_amount,
-                                                                                       self.tranx_fees,
-                                                                                       hash_data_result[0],
-                                                                                       hash_data_result[1],
-                                                                                       previous_hash,
-                                                                                       self.bitmoney_inputs,
-                                                                                       self.nonce, self.timestamp,
-                                                                                       bitmoney_gold_mined))
+
+        # #   Loading all transaction data in bitmoney ledger
+        run_database().write("INSERT INTO bitmoney_ledger(seed_address, root_address, tranx_amount, tranx_fees, proof_of_work, tranx_nonce, tranx_hash_id, previous_hash, inputs, timestamp, bitmoney_gold_mined) "
+                             "VALUES  ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(self.seed, self.root, self.tranx_amount, self.tranx_fees, hash_data_result[0], self.nonce,
+                                                                                                       hash_data_result[1], previous_hash, dumps(self.bitmoney_inputs), self.timestamp, bitmoney_gold_mined))
         return True
 
     # @property
@@ -126,6 +123,12 @@ class bitmoney_exchange_engine():
                 bitmoney_return = round(account_balance - self.total_tranx, 2)
                 #  creando una nueva pieza por retorno de la transaccion
                 bitmoney_value_generator(self.seed, bitmoney_return, tranx_nonce=self.nonce)
+
+                bitmoney_value_generator(self.root, self.tranx_amount, tranx_nonce=self.nonce)
+                #   Transfering fees per transferring to the network
+                bitmoney_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
+
+                #   Loading all transaction data in bitmoney ledger
                 #   processed the transaction
                 self.process_tranx()
 
@@ -136,6 +139,11 @@ class bitmoney_exchange_engine():
                 #   updating bitmoney pieces to spend!
                 self.updating_bitmoney_status_spend()
                 #   Transferring the bitmoney to final user
+
+                bitmoney_value_generator(self.root, self.tranx_amount, tranx_nonce=self.nonce)
+                #   Transfering fees per transferring to the network
+                bitmoney_value_generator('BME', self.tranx_fees, tranx_nonce=self.nonce)
+
                 self.process_tranx()
                 print(self.bitmoney_inputs)
                 return True
