@@ -4,6 +4,7 @@ from app.utils.terminal_alert import alerts
 from datetime import datetime
 from hashlib import sha3_512
 from uuid import uuid4, UUID
+from mysql.connector.errors import DatabaseError
 import pickle
 
 
@@ -27,5 +28,11 @@ def virtual_value_generator(seed_address, bitmoney_amount, tranx_nonce=None):
 
     hash_id = sha3_512(pickle.dumps(bitmoney_value_data)).hexdigest()
 
-    run_database().write(bitmoney_generator.format(bitmoney_value_data['seed_address'], hash_id, bitmoney_value_data['bitmoney_amount'],
-                         bitmoney_value_data['tranx_nonce'], bitmoney_value_data['seed_address'],bitmoney_value_data['timestamp']))
+    try:
+        run_database().write(bitmoney_generator.format(bitmoney_value_data['seed_type'], hash_id, bitmoney_value_data['bitmoney_amount'],
+                         bitmoney_value_data['tranx_nonce'], bitmoney_value_data['seed_address'], bitmoney_value_data['timestamp']))
+        return True
+    except DatabaseError as err:
+        print(err)
+        print(alerts.bad, 'error en la base de datos')
+        return False

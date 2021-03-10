@@ -49,7 +49,7 @@ def bitmoney_tranx():
                 flash('{} fue tranferido con éxito a {}'.format(bitmoney_amount, root_address))
                 return redirect(url_for('profile'))
             else:
-                print(alerts.bad, 'error con la transferencia!')
+                print(alerts.bad, 'error con la !')
                 flash('Existe un problema con tu cuenta prix!')
                 return redirect(url_for('profile'))
         else:
@@ -121,10 +121,14 @@ def new_bitmoney():
 def bitmoney_creation():
     if request.method == 'POST':
         seed_address = request.form['seed_address']
-        bitmoney_amount = request.form['amount']
-        virtual_value_generator(seed_address, bitmoney_amount)
-        flash('Dinero Digital agregado')
-        return redirect(url_for('new_bitmoney'))
+        bitmoney_amount = request.form['bitmoney_amount']
+        result = virtual_value_generator(seed_address, bitmoney_amount)
+        if result == True:
+            flash('Dinero Digital agregado')
+            return redirect(url_for('new_bitmoney'))
+        else:
+            flash('Error prix, algun truquito salio mal')
+            return redirect(url_for('new_bitmoney'))
 
 
 @bitmoney_platform.route('/digital_money_process', methods=['POST'])
