@@ -112,6 +112,14 @@ def register_action():
             return redirect(url_for('register'))
 
 
+@bitmoney_platform.route('/dashboard')
+def dashboard():
+    pass
+    # return render_template('admin/darshboard.html')
+
+
+
+
 @bitmoney_platform.route('/new_bitmoney')
 def new_bitmoney():
     return render_template('new_bitmoney.html')
